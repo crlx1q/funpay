@@ -1,0 +1,868 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FunPay Replica</title>
+  <style>
+    :root {
+      --bg: #0f1319;
+      --panel: #1a212b;
+      --panel-2: #212b37;
+      --text: #e8edf3;
+      --muted: #9ca9b8;
+      --accent: #4aa5ff;
+      --accent-2: #3f8ce0;
+      --success: #4caf68;
+      --danger: #d95b5b;
+      --border: #2d3744;
+      --warning: #f2b84b;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      background: #121821;
+      border-right: 1px solid var(--border);
+      padding: 18px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: auto;
+    }
+
+    .brand {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: .4px;
+      margin-bottom: 14px;
+    }
+
+    .brand span { color: var(--accent); }
+
+    .muted { color: var(--muted); }
+
+    .user-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 14px;
+    }
+
+    .balance {
+      font-weight: 700;
+      margin-top: 6px;
+    }
+
+    .nav {
+      display: grid;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .nav button {
+      text-align: left;
+      background: transparent;
+      color: var(--text);
+      border: 1px solid transparent;
+      padding: 10px 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .nav button.active,
+    .nav button:hover {
+      background: var(--panel);
+      border-color: var(--border);
+    }
+
+    .main {
+      padding: 20px;
+      display: grid;
+      gap: 16px;
+    }
+
+    .topbar {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 10px;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      background: var(--panel);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px;
+      font: inherit;
+    }
+
+    button.primary, .chip {
+      background: var(--accent);
+      border: 1px solid var(--accent-2);
+      color: white;
+      border-radius: 10px;
+      padding: 10px 14px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    button.secondary {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 10px;
+      padding: 10px 14px;
+      cursor: pointer;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+    }
+
+    .hidden { display: none !important; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 12px;
+    }
+
+    .lot-card {
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .row { display: flex; justify-content: space-between; gap: 8px; align-items: center; }
+    .small { font-size: 13px; }
+    .price { font-size: 20px; font-weight: 800; }
+    .tag {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 4px 8px;
+      font-size: 12px;
+      color: var(--muted);
+      background: #111821;
+    }
+
+    .tabs { display: flex; gap: 10px; flex-wrap: wrap; }
+
+    .chat-wrap {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 12px;
+      min-height: 480px;
+    }
+
+    .dialog-list { max-height: 520px; overflow: auto; display: grid; gap: 8px; }
+
+    .dialog-item {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px;
+      cursor: pointer;
+      background: var(--panel-2);
+    }
+
+    .messages {
+      height: 440px;
+      overflow: auto;
+      background: #10161e;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px;
+      display: grid;
+      gap: 8px;
+      align-content: flex-start;
+    }
+
+    .msg {
+      max-width: 70%;
+      padding: 8px 10px;
+      border-radius: 10px;
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    .msg.me { justify-self: end; background: #214064; }
+    .msg.other { justify-self: start; background: #293646; }
+
+    .order-status { font-weight: 700; }
+    .status-open { color: var(--warning); }
+    .status-done { color: var(--success); }
+    .status-cancelled { color: var(--danger); }
+
+    .auth {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+    }
+
+    .auth-card {
+      width: min(520px, 96vw);
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    @media (max-width: 960px) {
+      .layout { grid-template-columns: 1fr; }
+      .sidebar { position: static; height: auto; }
+      .chat-wrap { grid-template-columns: 1fr; }
+      .two-col { grid-template-columns: 1fr; }
+      .topbar { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div id="auth" class="auth"></div>
+  <div id="app" class="layout hidden">
+    <aside class="sidebar">
+      <div class="brand">fun<span>pay</span></div>
+      <div class="user-card" id="userCard"></div>
+      <div class="nav" id="nav"></div>
+    </aside>
+    <main class="main">
+      <div class="topbar panel">
+        <input id="searchInput" placeholder="Поиск товаров, игр и продавцов" />
+        <select id="categoryFilter"></select>
+        <button class="secondary" id="logoutBtn">Выйти</button>
+      </div>
+      <section id="view-market" class="view"></section>
+      <section id="view-orders" class="view hidden"></section>
+      <section id="view-chat" class="view hidden"></section>
+      <section id="view-wallet" class="view hidden"></section>
+      <section id="view-seller" class="view hidden"></section>
+      <section id="view-profile" class="view hidden"></section>
+    </main>
+  </div>
+
+  <script>
+    const storageKey = "funpay-replica-v1";
+
+    const defaultState = {
+      users: [
+        { id: 1, username: "admin", password: "admin", role: "seller", rating: 4.9, reviews: 1210, balance: 150000, walletOps: [] },
+        { id: 2, username: "player", password: "player", role: "buyer", rating: 4.7, reviews: 28, balance: 12000, walletOps: [] },
+        { id: 3, username: "goldseller", password: "123456", role: "seller", rating: 5.0, reviews: 5020, balance: 85000, walletOps: [] }
+      ],
+      lots: [
+        { id: 1, title: "World of Warcraft Gold EU", category: "MMO", game: "WoW", sellerId: 1, price: 95, stock: 5000, description: "Золото с быстрым трейдом, доставка 5-10 минут.", sales: 11240 },
+        { id: 2, title: "Valorant Points 2050", category: "Шутеры", game: "Valorant", sellerId: 1, price: 1590, stock: 97, description: "Официальное пополнение через безопасный метод.", sales: 2801 },
+        { id: 3, title: "Genshin Impact Primogems 6480", category: "RPG", game: "Genshin", sellerId: 3, price: 4690, stock: 144, description: "Моментальная выдача на аккаунт.", sales: 6930 },
+        { id: 4, title: "Dota 2 Coaching (1 hour)", category: "Услуги", game: "Dota 2", sellerId: 3, price: 1200, stock: 30, description: "Разбор реплеев + персональные рекомендации.", sales: 450 },
+        { id: 5, title: "Steam Gift Card 50$", category: "Подарочные карты", game: "Steam", sellerId: 1, price: 4990, stock: 20, description: "Цифровой код, выдача в чат.", sales: 1600 }
+      ],
+      orders: [],
+      chats: [],
+      currentUserId: null,
+      ui: { view: "market", selectedDialog: null }
+    };
+
+    const getState = () => {
+      const raw = localStorage.getItem(storageKey);
+      if (!raw) return structuredClone(defaultState);
+      try { return JSON.parse(raw); }
+      catch { return structuredClone(defaultState); }
+    };
+
+    let state = getState();
+
+    function saveState() {
+      localStorage.setItem(storageKey, JSON.stringify(state));
+    }
+
+    function money(v) {
+      return new Intl.NumberFormat("ru-RU").format(v) + " ₽";
+    }
+
+    function uid() {
+      return Math.floor(Math.random() * 1e9);
+    }
+
+    function currentUser() {
+      return state.users.find(u => u.id === state.currentUserId) || null;
+    }
+
+    function sellerById(id) {
+      return state.users.find(u => u.id === id);
+    }
+
+    function categories() {
+      return ["Все", ...new Set(state.lots.map(l => l.category))];
+    }
+
+    function renderAuth() {
+      const auth = document.getElementById("auth");
+      const app = document.getElementById("app");
+      if (state.currentUserId) {
+        auth.classList.add("hidden");
+        app.classList.remove("hidden");
+        renderAll();
+        return;
+      }
+      app.classList.add("hidden");
+      auth.classList.remove("hidden");
+      auth.innerHTML = `
+        <div class="auth-card">
+          <h2 style="margin:0">Вход / Регистрация</h2>
+          <div class="muted">Функциональная копия маркетплейса цифровых товаров.</div>
+          <div class="two-col">
+            <div class="panel">
+              <h3 style="margin-top:0">Вход</h3>
+              <input id="loginUser" placeholder="Логин" />
+              <input id="loginPass" type="password" placeholder="Пароль" style="margin-top:8px" />
+              <button id="loginBtn" class="primary" style="margin-top:10px">Войти</button>
+              <div class="small muted" style="margin-top:8px">Демо: admin/admin или player/player</div>
+            </div>
+            <div class="panel">
+              <h3 style="margin-top:0">Регистрация</h3>
+              <input id="regUser" placeholder="Логин" />
+              <input id="regPass" type="password" placeholder="Пароль" style="margin-top:8px" />
+              <select id="regRole" style="margin-top:8px">
+                <option value="buyer">Покупатель</option>
+                <option value="seller">Продавец</option>
+              </select>
+              <button id="regBtn" class="primary" style="margin-top:10px">Создать аккаунт</button>
+            </div>
+          </div>
+        </div>`;
+
+      document.getElementById("loginBtn").onclick = () => {
+        const username = document.getElementById("loginUser").value.trim();
+        const password = document.getElementById("loginPass").value;
+        const user = state.users.find(u => u.username === username && u.password === password);
+        if (!user) return alert("Неверный логин или пароль");
+        state.currentUserId = user.id;
+        saveState();
+        renderAuth();
+      };
+
+      document.getElementById("regBtn").onclick = () => {
+        const username = document.getElementById("regUser").value.trim();
+        const password = document.getElementById("regPass").value;
+        const role = document.getElementById("regRole").value;
+        if (!username || !password) return alert("Заполните все поля");
+        if (state.users.some(u => u.username.toLowerCase() === username.toLowerCase())) return alert("Логин уже занят");
+        const user = { id: uid(), username, password, role, rating: 5.0, reviews: 0, balance: 0, walletOps: [] };
+        state.users.push(user);
+        state.currentUserId = user.id;
+        saveState();
+        renderAuth();
+      };
+    }
+
+    function navItems() {
+      const user = currentUser();
+      const arr = [
+        ["market", "Маркет"],
+        ["orders", "Заказы"],
+        ["chat", "Чаты"],
+        ["wallet", "Кошелек"],
+        ["profile", "Профиль"]
+      ];
+      if (user?.role === "seller") arr.splice(4, 0, ["seller", "Панель продавца"]);
+      return arr;
+    }
+
+    function switchView(view) {
+      state.ui.view = view;
+      saveState();
+      renderAll();
+    }
+
+    function renderNav() {
+      const nav = document.getElementById("nav");
+      nav.innerHTML = "";
+      navItems().forEach(([k, title]) => {
+        const b = document.createElement("button");
+        b.textContent = title;
+        b.className = state.ui.view === k ? "active" : "";
+        b.onclick = () => switchView(k);
+        nav.appendChild(b);
+      });
+    }
+
+    function renderUserCard() {
+      const u = currentUser();
+      document.getElementById("userCard").innerHTML = `
+        <div class="row"><strong>${u.username}</strong><span class="tag">${u.role === "seller" ? "Продавец" : "Покупатель"}</span></div>
+        <div class="small muted">Рейтинг: ${u.rating.toFixed(1)} ★ (${u.reviews})</div>
+        <div class="balance">Баланс: ${money(u.balance)}</div>
+      `;
+    }
+
+    function renderFilters() {
+      const select = document.getElementById("categoryFilter");
+      const old = select.value;
+      select.innerHTML = categories().map(c => `<option value="${c}">${c}</option>`).join("");
+      if ([...select.options].some(o => o.value === old)) select.value = old;
+      else select.value = "Все";
+    }
+
+    function buyLot(lotId) {
+      const user = currentUser();
+      const lot = state.lots.find(l => l.id === lotId);
+      if (!lot) return;
+      if (lot.stock <= 0) return alert("Товар закончился");
+      if (lot.sellerId === user.id) return alert("Нельзя купить свой лот");
+      if (user.balance < lot.price) return alert("Недостаточно средств на балансе");
+
+      user.balance -= lot.price;
+      const seller = sellerById(lot.sellerId);
+      seller.balance += lot.price;
+      lot.stock -= 1;
+      lot.sales += 1;
+
+      const order = {
+        id: uid(),
+        lotId: lot.id,
+        title: lot.title,
+        buyerId: user.id,
+        sellerId: lot.sellerId,
+        amount: lot.price,
+        status: "open",
+        createdAt: new Date().toISOString()
+      };
+      state.orders.unshift(order);
+
+      const buyerOps = user.walletOps || (user.walletOps = []);
+      const sellerOps = seller.walletOps || (seller.walletOps = []);
+      buyerOps.unshift({ id: uid(), type: "purchase", amount: -lot.price, note: `Покупка: ${lot.title}`, at: order.createdAt });
+      sellerOps.unshift({ id: uid(), type: "sale", amount: lot.price, note: `Продажа: ${lot.title}`, at: order.createdAt });
+
+      openChat(order.buyerId, order.sellerId, `Здравствуйте! Заказ #${order.id} по товару "${lot.title}" создан.`);
+
+      saveState();
+      renderAll();
+      alert("Заказ оформлен");
+    }
+
+    function renderMarket() {
+      const view = document.getElementById("view-market");
+      const term = document.getElementById("searchInput").value.trim().toLowerCase();
+      const cat = document.getElementById("categoryFilter").value;
+
+      const lots = state.lots.filter(l => {
+        const s = sellerById(l.sellerId);
+        const matchTerm = [l.title, l.game, l.category, l.description, s?.username].join(" ").toLowerCase().includes(term);
+        const matchCat = cat === "Все" || l.category === cat;
+        return matchTerm && matchCat;
+      });
+
+      view.innerHTML = `
+        <div class="panel row">
+          <div>
+            <h2 style="margin:0">Каталог лотов</h2>
+            <div class="small muted">Найдено: ${lots.length}</div>
+          </div>
+        </div>
+        <div class="grid" id="lotsGrid"></div>
+      `;
+
+      const grid = document.getElementById("lotsGrid");
+      lots.forEach(l => {
+        const s = sellerById(l.sellerId);
+        const card = document.createElement("article");
+        card.className = "lot-card";
+        card.innerHTML = `
+          <div class="row"><strong>${l.title}</strong><span class="tag">${l.game}</span></div>
+          <div class="small muted">${l.description}</div>
+          <div class="tabs">
+            <span class="tag">${l.category}</span>
+            <span class="tag">Продавец: ${s.username}</span>
+            <span class="tag">Продаж: ${l.sales}</span>
+            <span class="tag">Остаток: ${l.stock}</span>
+          </div>
+          <div class="row">
+            <div class="price">${money(l.price)}</div>
+            <button class="primary" ${l.stock <= 0 ? "disabled" : ""}>Купить</button>
+          </div>
+        `;
+        card.querySelector("button").onclick = () => buyLot(l.id);
+        grid.appendChild(card);
+      });
+    }
+
+    function statusClass(status) {
+      return status === "open" ? "status-open" : status === "done" ? "status-done" : "status-cancelled";
+    }
+
+    function renderOrders() {
+      const u = currentUser();
+      const view = document.getElementById("view-orders");
+      const myOrders = state.orders.filter(o => o.buyerId === u.id || o.sellerId === u.id);
+
+      view.innerHTML = `
+        <div class="panel"><h2 style="margin:0">Мои заказы</h2></div>
+        <div class="grid" id="ordersGrid"></div>
+      `;
+      const grid = document.getElementById("ordersGrid");
+
+      myOrders.forEach(o => {
+        const lot = state.lots.find(l => l.id === o.lotId);
+        const buyer = sellerById(o.buyerId);
+        const seller = sellerById(o.sellerId);
+        const isSeller = u.id === o.sellerId;
+
+        const card = document.createElement("article");
+        card.className = "lot-card";
+        card.innerHTML = `
+          <div class="row"><strong>#${o.id}</strong><span class="order-status ${statusClass(o.status)}">${o.status}</span></div>
+          <div>${o.title}</div>
+          <div class="small muted">Покупатель: ${buyer.username}</div>
+          <div class="small muted">Продавец: ${seller.username}</div>
+          <div class="price">${money(o.amount)}</div>
+          <div class="tabs">
+            ${o.status === "open" && isSeller ? '<button class="chip complete">Подтвердить выполнение</button>' : ''}
+            ${o.status === "open" && !isSeller ? '<button class="secondary cancel">Отменить заказ</button>' : ''}
+            <button class="secondary open-chat">Открыть чат</button>
+          </div>
+        `;
+
+        const complete = card.querySelector(".complete");
+        if (complete) complete.onclick = () => {
+          o.status = "done";
+          const at = new Date().toISOString();
+          openChat(o.sellerId, o.buyerId, `Заказ #${o.id} отмечен как выполненный.`);
+          saveState();
+          renderAll();
+        };
+
+        const cancel = card.querySelector(".cancel");
+        if (cancel) cancel.onclick = () => {
+          o.status = "cancelled";
+          const buyerU = sellerById(o.buyerId);
+          const sellerU = sellerById(o.sellerId);
+          buyerU.balance += o.amount;
+          sellerU.balance -= o.amount;
+          buyerU.walletOps.unshift({ id: uid(), type: "refund", amount: o.amount, note: `Возврат за заказ #${o.id}`, at: new Date().toISOString() });
+          sellerU.walletOps.unshift({ id: uid(), type: "refund_out", amount: -o.amount, note: `Списание возврата #${o.id}`, at: new Date().toISOString() });
+          if (lot) lot.stock += 1;
+          openChat(o.buyerId, o.sellerId, `Заказ #${o.id} отменен покупателем.`);
+          saveState();
+          renderAll();
+        };
+
+        card.querySelector(".open-chat").onclick = () => {
+          ensureDialog(o.buyerId, o.sellerId);
+          state.ui.selectedDialog = dialogId(o.buyerId, o.sellerId);
+          switchView("chat");
+        };
+
+        grid.appendChild(card);
+      });
+    }
+
+    function dialogId(a, b) {
+      return [a, b].sort((x, y) => x - y).join(":");
+    }
+
+    function ensureDialog(a, b) {
+      const id = dialogId(a, b);
+      let c = state.chats.find(c => c.id === id);
+      if (!c) {
+        c = { id, users: [a, b], messages: [] };
+        state.chats.unshift(c);
+      }
+      return c;
+    }
+
+    function openChat(from, to, text) {
+      const c = ensureDialog(from, to);
+      c.messages.push({ id: uid(), from, text, at: new Date().toISOString() });
+    }
+
+    function renderChat() {
+      const u = currentUser();
+      const view = document.getElementById("view-chat");
+      const myDialogs = state.chats.filter(c => c.users.includes(u.id));
+
+      if (!state.ui.selectedDialog && myDialogs[0]) state.ui.selectedDialog = myDialogs[0].id;
+
+      view.innerHTML = `
+        <div class="panel"><h2 style="margin:0">Чаты</h2></div>
+        <div class="chat-wrap">
+          <div class="panel dialog-list" id="dialogList"></div>
+          <div class="panel" id="dialogPanel"></div>
+        </div>
+      `;
+
+      const list = document.getElementById("dialogList");
+      myDialogs.forEach(d => {
+        const otherId = d.users.find(id => id !== u.id);
+        const other = sellerById(otherId);
+        const last = d.messages[d.messages.length - 1];
+        const item = document.createElement("div");
+        item.className = "dialog-item";
+        item.innerHTML = `
+          <div class="row"><strong>${other.username}</strong><span class="small muted">${d.messages.length}</span></div>
+          <div class="small muted">${last ? last.text.slice(0, 42) : "Нет сообщений"}</div>
+        `;
+        item.onclick = () => {
+          state.ui.selectedDialog = d.id;
+          saveState();
+          renderChat();
+        };
+        list.appendChild(item);
+      });
+
+      const d = myDialogs.find(x => x.id === state.ui.selectedDialog);
+      const panel = document.getElementById("dialogPanel");
+      if (!d) {
+        panel.innerHTML = "<div class='muted'>У вас пока нет диалогов.</div>";
+        return;
+      }
+      const other = sellerById(d.users.find(id => id !== u.id));
+      panel.innerHTML = `
+        <div class="row"><strong>Диалог с ${other.username}</strong><span class="small muted">${other.role}</span></div>
+        <div class="messages" id="messages"></div>
+        <div class="row" style="margin-top:8px">
+          <input id="msgInput" placeholder="Введите сообщение" />
+          <button id="sendBtn" class="primary">Отправить</button>
+        </div>
+      `;
+      const messages = document.getElementById("messages");
+      d.messages.forEach(m => {
+        const div = document.createElement("div");
+        div.className = "msg " + (m.from === u.id ? "me" : "other");
+        div.textContent = m.text;
+        messages.appendChild(div);
+      });
+      messages.scrollTop = messages.scrollHeight;
+
+      document.getElementById("sendBtn").onclick = () => {
+        const input = document.getElementById("msgInput");
+        const text = input.value.trim();
+        if (!text) return;
+        d.messages.push({ id: uid(), from: u.id, text, at: new Date().toISOString() });
+        saveState();
+        renderChat();
+      };
+    }
+
+    function renderWallet() {
+      const u = currentUser();
+      const view = document.getElementById("view-wallet");
+      const ops = u.walletOps || [];
+      view.innerHTML = `
+        <div class="panel">
+          <h2 style="margin-top:0">Кошелек</h2>
+          <div class="row">
+            <div class="price">${money(u.balance)}</div>
+            <div class="tabs">
+              <button id="deposit" class="primary">Пополнить +1000</button>
+              <button id="withdraw" class="secondary">Вывести -1000</button>
+            </div>
+          </div>
+        </div>
+        <div class="panel">
+          <h3 style="margin-top:0">История операций</h3>
+          <div id="ops"></div>
+        </div>
+      `;
+
+      document.getElementById("deposit").onclick = () => {
+        u.balance += 1000;
+        ops.unshift({ id: uid(), type: "deposit", amount: 1000, note: "Пополнение баланса", at: new Date().toISOString() });
+        saveState();
+        renderWallet();
+        renderUserCard();
+      };
+
+      document.getElementById("withdraw").onclick = () => {
+        if (u.balance < 1000) return alert("Недостаточно средств");
+        u.balance -= 1000;
+        ops.unshift({ id: uid(), type: "withdraw", amount: -1000, note: "Вывод средств", at: new Date().toISOString() });
+        saveState();
+        renderWallet();
+        renderUserCard();
+      };
+
+      const opsNode = document.getElementById("ops");
+      opsNode.innerHTML = ops.length ? ops.map(op => `
+        <div class="row" style="padding:8px 0;border-bottom:1px solid var(--border)">
+          <div>
+            <div>${op.note}</div>
+            <div class="small muted">${new Date(op.at).toLocaleString("ru-RU")}</div>
+          </div>
+          <strong style="color:${op.amount < 0 ? 'var(--danger)' : 'var(--success)'}">${money(op.amount)}</strong>
+        </div>
+      `).join("") : "<div class='muted'>Операций пока нет.</div>";
+    }
+
+    function renderSellerPanel() {
+      const u = currentUser();
+      const view = document.getElementById("view-seller");
+      if (u.role !== "seller") {
+        view.innerHTML = "<div class='panel'>Раздел доступен только продавцам.</div>";
+        return;
+      }
+      const myLots = state.lots.filter(l => l.sellerId === u.id);
+      view.innerHTML = `
+        <div class="panel"><h2 style="margin-top:0">Панель продавца</h2></div>
+        <div class="panel">
+          <h3 style="margin-top:0">Создать лот</h3>
+          <div class="two-col">
+            <input id="lotTitle" placeholder="Название" />
+            <input id="lotGame" placeholder="Игра" />
+            <input id="lotCategory" placeholder="Категория" />
+            <input id="lotPrice" type="number" min="1" placeholder="Цена" />
+            <input id="lotStock" type="number" min="1" placeholder="Остаток" />
+            <input id="lotDescription" placeholder="Описание" />
+          </div>
+          <button id="createLot" class="primary" style="margin-top:10px">Опубликовать</button>
+        </div>
+        <div class="panel">
+          <h3 style="margin-top:0">Мои лоты</h3>
+          <div class="grid" id="sellerLots"></div>
+        </div>
+      `;
+
+      document.getElementById("createLot").onclick = () => {
+        const title = document.getElementById("lotTitle").value.trim();
+        const game = document.getElementById("lotGame").value.trim();
+        const category = document.getElementById("lotCategory").value.trim();
+        const price = Number(document.getElementById("lotPrice").value);
+        const stock = Number(document.getElementById("lotStock").value);
+        const description = document.getElementById("lotDescription").value.trim();
+        if (!title || !game || !category || !description || price <= 0 || stock <= 0) return alert("Заполните все поля корректно");
+        state.lots.unshift({ id: uid(), title, game, category, price, stock, description, sellerId: u.id, sales: 0 });
+        saveState();
+        renderAll();
+      };
+
+      const grid = document.getElementById("sellerLots");
+      myLots.forEach(l => {
+        const card = document.createElement("article");
+        card.className = "lot-card";
+        card.innerHTML = `
+          <div><strong>${l.title}</strong></div>
+          <div class="small muted">${l.description}</div>
+          <div class="tabs">
+            <span class="tag">${money(l.price)}</span>
+            <span class="tag">Остаток: ${l.stock}</span>
+            <span class="tag">Продаж: ${l.sales}</span>
+          </div>
+          <div class="row">
+            <button class="secondary edit">Редактировать</button>
+            <button class="secondary del">Удалить</button>
+          </div>
+        `;
+        card.querySelector(".edit").onclick = () => {
+          const p = Number(prompt("Новая цена", l.price));
+          const s = Number(prompt("Новый остаток", l.stock));
+          if (p > 0) l.price = p;
+          if (s >= 0) l.stock = s;
+          saveState();
+          renderAll();
+        };
+        card.querySelector(".del").onclick = () => {
+          if (!confirm("Удалить лот?")) return;
+          state.lots = state.lots.filter(x => x.id !== l.id);
+          saveState();
+          renderAll();
+        };
+        grid.appendChild(card);
+      });
+    }
+
+    function renderProfile() {
+      const u = currentUser();
+      const view = document.getElementById("view-profile");
+      const sales = state.orders.filter(o => o.sellerId === u.id && o.status === "done").length;
+      const buys = state.orders.filter(o => o.buyerId === u.id).length;
+      view.innerHTML = `
+        <div class="panel">
+          <h2 style="margin-top:0">Профиль</h2>
+          <div class="small muted">Управление аккаунтом и статистика</div>
+          <div class="grid" style="margin-top:10px">
+            <div class="lot-card"><div class="muted small">Пользователь</div><strong>${u.username}</strong></div>
+            <div class="lot-card"><div class="muted small">Рейтинг</div><strong>${u.rating.toFixed(1)} ★</strong></div>
+            <div class="lot-card"><div class="muted small">Покупок</div><strong>${buys}</strong></div>
+            <div class="lot-card"><div class="muted small">Успешных продаж</div><strong>${sales}</strong></div>
+          </div>
+          <div class="row" style="margin-top:10px">
+            <button id="changePass" class="secondary">Сменить пароль</button>
+            <button id="resetAll" class="secondary">Сбросить демо-базу</button>
+          </div>
+        </div>
+      `;
+
+      document.getElementById("changePass").onclick = () => {
+        const p = prompt("Новый пароль");
+        if (!p || p.length < 3) return alert("Минимум 3 символа");
+        u.password = p;
+        saveState();
+        alert("Пароль обновлен");
+      };
+
+      document.getElementById("resetAll").onclick = () => {
+        if (!confirm("Полностью сбросить локальную базу и выйти?")) return;
+        localStorage.removeItem(storageKey);
+        state = structuredClone(defaultState);
+        renderAuth();
+      };
+    }
+
+    function renderVisibleView() {
+      document.querySelectorAll(".view").forEach(v => v.classList.add("hidden"));
+      const id = `view-${state.ui.view}`;
+      const target = document.getElementById(id);
+      if (target) target.classList.remove("hidden");
+    }
+
+    function renderAll() {
+      renderNav();
+      renderUserCard();
+      renderFilters();
+      renderMarket();
+      renderOrders();
+      renderChat();
+      renderWallet();
+      renderSellerPanel();
+      renderProfile();
+      renderVisibleView();
+    }
+
+    document.getElementById("searchInput").addEventListener("input", renderMarket);
+    document.getElementById("categoryFilter").addEventListener("change", renderMarket);
+
+    document.getElementById("logoutBtn").onclick = () => {
+      state.currentUserId = null;
+      saveState();
+      renderAuth();
+    };
+
+    renderAuth();
+  </script>
+</body>
+</html>
